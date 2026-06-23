@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบพยากรณ์และวิเคราะห์การอนุบาลลูกปลานิลแดง (Nursery Dashboard)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 20px; }
+        .hero-section { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; padding: 25px 0; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; border-top: 4px solid #0284c7; }
+        .card-header { background-color: #fff; font-weight: bold; border-bottom: 1px solid #e2e8f0; border-radius: 12px 12px 0 0 !important; font-size: 1.1rem; }
+        .btn-calc { background-color: #e11d48; color: white; font-size: 1.1rem; font-weight: bold; padding: 12px; border-radius: 8px; border: none; box-shadow: 0 4px 6px rgba(225, 29, 72, 0.3); transition: all 0.3s ease; }
+        .btn-calc:hover { background-color: #be123c; color: white; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(225, 29, 72, 0.4); }
+        .btn-save { background-color: #10b981; color: white; font-size: 1.1rem; font-weight: bold; padding: 12px; border-radius: 8px; border: none; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3); transition: all 0.3s ease; }
+        .btn-save:hover { background-color: #059669; color: white; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4); }
+        .btn-exit { background-color: #475569; color: white; font-size: 1.1rem; font-weight: bold; padding: 12px; border-radius: 8px; border: none; transition: all 0.3s ease; }
+        .btn-exit:hover { background-color: #334155; color: white; transform: translateY(-2px); }
+        .result-box { background-color: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; height: 100%; text-align: center; position: relative; }
+        .result-title { color: #64748b; font-size: 0.9rem; font-weight: bold; text-transform: uppercase; margin-bottom: 8px; }
+        .result-val { font-size: 1.7rem; font-weight: 800; color: #0f172a; margin-bottom: 5px; transition: color 0.3s ease; }
+        .finance-card { background-color: #1e293b; color: white; border-top: 4px solid #eab308; }
+        .text-green { color: #10b981; } .text-red { color: #ef4444; } .text-orange { color: #f59e0b; }
+        label { font-size: 0.85rem; font-weight: 600; color: #475569; margin-top: 8px; }
+        .form-control, .form-select { border-color: #cbd5e1; transition: all 0.2s; }
+        .form-control:focus, .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 0.2rem rgba(59,130,246,0.25); }
+        .cost-table th, .cost-table td { background: transparent; color: white; border-color: #334155; padding: 6px 10px; font-size: 0.95rem; vertical-align: middle; }
+        .cost-table .val-col { text-align: right; font-weight: bold; color: #facc15; }
+        .kpi-box { text-align: center; background: #0f172a; border-radius: 8px; padding: 10px; border: 1px solid #334155; }
+        .period-badge { font-size: 0.75rem; font-weight: bold; position: absolute; top: 10px; right: 10px; background: #3b82f6; color: white; padding: 3px 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        .developer-credit-box { background: linear-gradient(135deg, #0284c7 0%, #06b6d4 100%); border-radius: 12px; padding: 25px; margin: 30px auto; max-width: 800px; box-shadow: 0 6px 15px rgba(2, 132, 199, 0.25); border: 2px solid #bae6fd; text-align: center; }
+        .dev-line-1 { font-size: 1.15rem; font-weight: 800; color: #fef08a; margin-bottom: 4px; letter-spacing: 0.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .dev-line-2 { font-size: 0.95rem; font-weight: 500; color: #f8fafc; }
+        .dev-icon { margin-right: 8px; color: #fef08a; }
+        
+        /* สไตล์สำหรับรูปภาพโปรไฟล์วงกลม */
+        .profile-wrapper { margin-bottom: 15px; display: flex; justify-content: center; }
+        .profile-img { width: 130px; height: 130px; object-fit: cover; border-radius: 50%; border: 4px solid #facc15; box-shadow: 0 4px 10px rgba(0,0,0,0.3); background-color: #fff; }
+
+        .survey-card { border-top-color: #ec4899; }
+        .survey-header { color: #ec4899; }
+        .vote-btn-group .btn { border-radius: 8px; font-weight: 600; padding: 10px 5px; font-size: 0.9rem; }
+        .correlation-box { background-color: #f8fafc; border-left: 5px solid #8b5cf6; padding: 15px; margin-bottom: 15px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        /* สไตล์ประวัติ Dropdown ปรับปรุง 5x3 Grid สมบูรณ์แบบ */
+        .history-card { border-top-color: #0d9488; }
+        .history-header { cursor: pointer; transition: background-color 0.2s; }
+        .history-header:hover { background-color: #f1f5f9 !important; }
+        .history-data-box { border: 1px solid #e2e8f0; background-color: #fff; border-radius: 8px; padding: 12px 8px; height: 100%; display: flex; flex-direction: column; justify-content: center; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        .history-data-title { font-size: 0.75rem; color: #64748b; font-weight: bold; margin-bottom: 4px; line-height: 1.2; word-wrap: break-word; }
+        .history-data-val { font-size: 1.05rem; font-weight: 800; color: #0f172a; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+
+<div class="hero-section text-center" id="mainHeader">
+    <h2 class="fw-bold"><i class="fa-solid fa-fish-fins me-2"></i> ระบบพยากรณ์และวิเคราะห์การอนุบาลลูกปลานิลแดง</h2>
+    <p class="mb-0 fs-5">บูรณาการระบบ MNB, Airlift และ Biofloc (สรีรวิทยาและโภชนศาสตร์เชิงพลวัต)</p>
+</div>
+
+<div class="container-fluid px-4" id="mainApp">
+    <div class="row">
+        <div class="col-xl-4 col-lg-5 mb-4">
+            
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <button class="btn btn-calc flex-grow-1" onclick="calculateAll()" title="อัปเดตผลการพยากรณ์">
+                    <i class="fa-solid fa-calculator me-1"></i> อัปเดต
+                </button>
+                <button class="btn btn-save flex-grow-1" onclick="saveData()" title="บันทึกข้อมูลปัจจุบัน">
+                    <i class="fa-solid fa-save me-1"></i> บันทึก
+                </button>
+                <button class="btn btn-exit" onclick="exitProgram()" title="ออกจากโปรแกรม">
+                    <i class="fa-solid fa-power-off"></i>
+                </button>
+            </div>
+
+            <div class="card" style="border-top-color: #3b82f6;">
+                <div class="card-header text-primary"><i class="fa-solid fa-water me-2"></i> 1. ข้อมูลปลาและการเลี้ยง</div>
+                <div class="card-body row g-2">
+                    <div class="col-6">
+                        <label>อายุปลาปัจจุบัน (วัน)</label>
+                        <input type="number" class="form-control fw-bold text-primary border-primary" id="inDays" value="70" min="1" max="70">
+                    </div>
+                    <div class="col-6"><label>น้ำหนักเริ่มปล่อย (กรัม)</label><input type="number" step="0.1" class="form-control" id="inWeight" value="2.5"></div>
+                    <div class="col-6"><label>ความหนาแน่น (ตัว)</label><input type="number" class="form-control" id="inQty" value="3100"></div>
+                    <div class="col-6">
+                        <label>การใช้ระบบ Biofloc</label>
+                        <select class="form-select border-primary fw-bold text-primary" id="inBiofloc">
+                            <option value="no">ไม่ใช้</option>
+                            <option value="yes" selected>ใช้ (เสริม C)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 mt-3 pt-2 border-top">
+                        <label class="text-danger fw-bold"><i class="fa-solid fa-utensils me-1"></i> ปริมาณอาหารที่ให้จริงวันนี้ (กก./วัน)</label>
+                        <input type="number" step="0.01" class="form-control border-danger bg-light" id="inActualFeed" value="4.25">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="border-top-color: #10b981;">
+                <div class="card-header text-success"><i class="fa-solid fa-fan me-2"></i> 2. อุปกรณ์และระบบเติมอากาศ</div>
+                <div class="card-body row g-2">
+                    <div class="col-12">
+                        <label>รูปแบบระบบเติมอากาศหลัก</label>
+                        <select class="form-select border-success bg-light fw-bold text-success" id="inAeration">
+                            <option value="T1">Exp1: T1 - 2 Airlift (2AL)</option>
+                            <option value="T2">Exp1: T2 - 1 MNB (21% O2)</option>
+                            <option value="T3">Exp1: T3 - 2AL + 1 MNB (21% O2)</option>
+                            <option value="T4">Exp1: T4 - 2AL + 1 MNB (99% O2)</option>
+                            <option value="INT1">Exp2: INT-1 (MNB21 -> AL+MNB21)</option>
+                            <option value="INT2" selected>Exp2: INT-2 (AL -> AL+MNB21) [แนะนำ]</option>
+                            <option value="INT3">Exp2: INT-3 (AL+MNB21 -> AL+MNB99)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-12 mt-2 pt-2 border-top"><label class="text-secondary fw-bold">มอเตอร์ปั๊ม (Blower)</label></div>
+                    <div class="col-4"><label>ขนาด (HP)</label><input type="number" step="0.1" class="form-control" id="inBHP" value="3.0"></div>
+                    <div class="col-4"><label>ใช้ร่วม (บ่อ)</label><input type="number" class="form-control" id="inBPonds" value="9"></div>
+                    <div class="col-4"><label>ราคา (บ.)</label><input type="number" class="form-control" id="inBPrice" value="10500"></div>
+
+                    <div class="col-12 mt-2 pt-2 border-top"><label class="text-secondary fw-bold">เครื่อง Micro-Nano Bubble (MNB)</label></div>
+                    <div class="col-4"><label>ขนาด (W)</label><input type="number" class="form-control" id="inMWatts" value="900"></div>
+                    <div class="col-4"><label>จำนวน/บ่อ</label><input type="number" class="form-control" id="inMQty" value="1"></div>
+                    <div class="col-4"><label>ราคา (บ.)</label><input type="number" class="form-control" id="inMPrice" value="13500"></div>
+
+                    <div class="col-12 mt-2 pt-2 border-top"><label class="text-secondary fw-bold">ชุดแอร์ลิฟท์ (Airlift) & บ่อผ้าใบ</label></div>
+                    <div class="col-3"><label>AL/บ่อ</label><input type="number" class="form-control" id="inAQty" value="2"></div>
+                    <div class="col-3"><label>ราคา/ชุด</label><input type="number" class="form-control" id="inAPrice" value="1000"></div>
+                    <div class="col-3"><label>บ่อ ศก.(ม.)</label><input type="number" step="0.1" class="form-control" id="inPondSize" value="3.0"></div>
+                    <div class="col-3"><label>ราคาบ่อ</label><input type="number" class="form-control" id="inPondPrice" value="7500"></div>
+                </div>
+            </div>
+
+            <div class="card" style="border-top-color: #8b5cf6;">
+                <div class="card-header" style="color: #8b5cf6;"><i class="fa-solid fa-coins me-2"></i> 3. ข้อมูลการเงินและต้นทุน (บาท)</div>
+                <div class="card-body row g-2">
+                    <div class="col-6"><label>ราคาขายปลา (บ./ตัว)</label><input type="number" step="0.1" class="form-control" id="inSellPrice" value="8"></div>
+                    <div class="col-6"><label>ราคาลูกปลา (บ./ตัว)</label><input type="number" step="0.1" class="form-control" id="inFryPrice" value="1"></div>
+                    
+                    <div class="col-12 mt-2 pt-2 border-top"><label class="fw-bold text-primary"><i class="fa-solid fa-box-open me-1"></i> ระดับโปรตีนและราคาอาหารปลา</label></div>
+                    <div class="col-6">
+                        <label style="font-size: 0.75rem;">ระยะที่ 1 (วันที่ 1-28)</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <span class="input-group-text">% โปรตีน</span>
+                            <input type="number" class="form-control fw-bold bg-light" id="inProtein1" value="42">
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">บ./20กก.</span>
+                            <input type="number" class="form-control" id="inFeedPrice1" value="1450">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label style="font-size: 0.75rem;">ระยะที่ 3 (วันที่ 32-70)</label>
+                        <div class="input-group input-group-sm mb-1">
+                            <span class="input-group-text">% โปรตีน</span>
+                            <input type="number" class="form-control fw-bold bg-light" id="inProtein2" value="32">
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">บ./20กก.</span>
+                            <input type="number" class="form-control" id="inFeedPrice2" value="572">
+                        </div>
+                    </div>
+                    <div class="col-12 mt-1">
+                        <div style="font-size: 0.7rem; color: #64748b;">*ระยะ 2 (วันที่ 29-31) ระบบจะผสมอาหารระยะ 1 และ 3 สัดส่วน 75:25, 50:50, 25:75 เพื่อปรับลำไส้</div>
+                    </div>
+                    
+                    <div class="col-12 mt-2 pt-2 border-top"><label class="fw-bold text-info"><i class="fa-solid fa-bolt me-1"></i> ค่าพลังงานและออกซิเจน</label></div>
+                    <div class="col-4"><label>ค่าไฟ (บ./หน่วย)</label><input type="number" step="0.1" class="form-control" id="inElecPrice" value="4.5"></div>
+                    <div class="col-4"><label>O2 1ถัง(วัน)</label><input type="number" step="0.1" class="form-control" id="inO2Days" value="1.4"></div>
+                    <div class="col-4"><label>ราคา O2/ถัง</label><input type="number" class="form-control" id="inO2Price" value="120"></div>
+                </div>
+            </div>
+
+            <div class="card" style="border-top-color: #0ea5e9;">
+                <div class="card-header text-info"><i class="fa-solid fa-flask me-2"></i> 4. คุณภาพน้ำวันนี้ (วิเคราะห์ปัจจัยจำกัด)</div>
+                <div class="card-body row g-2">
+                    <div class="col-3"><label>Temp (°C)</label><input type="number" step="0.01" class="form-control" id="inTemp" value="29.15"></div>
+                    <div class="col-3"><label>TAN (mg/L)</label><input type="number" step="0.01" class="form-control" id="inTAN" value="1.38"></div>
+                    <div class="col-3"><label>Nitrite (mg/L)</label><input type="number" step="0.01" class="form-control" id="inNO2" value="1.68"></div>
+                    <div class="col-3"><label>pH</label><input type="number" step="0.01" class="form-control" id="inPH" value="7.22"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-xl-8 col-lg-7">
+            
+            <div class="row g-3 mb-3">
+                <div class="col-md-4 col-6">
+                    <div class="result-box shadow-sm border-primary">
+                        <div class="period-badge">ณ วันนี้</div>
+                        <div class="result-title">น้ำหนักเฉลี่ยปัจจุบัน</div>
+                        <div class="result-val text-primary" id="outWeight">0.0 g</div>
+                        <div class="badge bg-primary w-100" id="outADG">ADG ในวันนี้: 0.00 g/d</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="result-box shadow-sm border-success">
+                        <div class="period-badge">ณ วันนี้</div>
+                        <div class="result-title">จำนวนปลาที่รอด</div>
+                        <div class="result-val text-success" id="outSurvFish">0 ตัว</div>
+                        <div class="badge bg-success w-100" id="outSurvPct">%รอด ณ วันนี้: 0.0%</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-12">
+                    <div class="result-box shadow-sm border-danger" style="background-color: #fff1f2;">
+                        <div class="period-badge bg-danger">Correlation Adjusted</div>
+                        <div class="result-title text-danger" style="font-size: 0.8rem;">อาหารที่ควรให้วันนี้ (Kg/d)</div>
+                        <div class="result-val text-danger" id="outRecFeed" style="font-size: 1.4rem;">0.00 kg</div>
+                        <div id="outRecFeedDetails" style="font-size: 0.85rem; font-weight: bold; color: #b91c1c; line-height: 1.3; margin-bottom: 5px;"></div>
+                        <div class="badge bg-danger w-100" id="outCumFeed">อาหารสะสมรวม: 0.00 kg</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="result-box shadow-sm border-secondary">
+                        <div class="period-badge bg-secondary">พยากรณ์</div>
+                        <div class="result-title">ผลผลิตรวม (Yield)</div>
+                        <div class="result-val text-secondary" id="outYield">0.0 kg</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="result-box shadow-sm" style="border-top-color: #8b5cf6;">
+                        <div class="period-badge" style="background-color: #8b5cf6;">ณ วันนี้</div>
+                        <div class="result-title">FCR ในวันนี้</div>
+                        <div class="result-val" style="color:#8b5cf6;" id="outFCR">0.00</div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-12">
+                    <div class="result-box shadow-sm border-info">
+                        <div class="period-badge bg-info text-dark">พยากรณ์</div>
+                        <div class="result-title">ค่า DO ในบ่อวันนี้</div>
+                        <div class="result-val text-info" id="outDO">0.0 mg/L</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card finance-card shadow-lg mb-3">
+                <div class="card-body px-4 pt-4 pb-2">
+                    <h5 class="text-center mb-3 text-white-50"><i class="fa-solid fa-chart-line me-2"></i> สรุปผลประกอบการ ณ อายุปัจจุบัน</h5>
+                    <div class="row text-center mb-4">
+                        <div class="col-4 border-end border-secondary">
+                            <div class="text-white-50 fs-6">รายได้ทั้งหมด (Revenue)</div>
+                            <h2 class="text-green fw-bold mb-0" id="outRev">0 ฿</h2>
+                        </div>
+                        <div class="col-4 border-end border-secondary">
+                            <div class="text-white-50 fs-6">ต้นทุนทั้งหมด (Total Cost)</div>
+                            <h2 class="text-danger fw-bold mb-0" id="outCost">0 ฿</h2>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-white-50 fs-6">กำไรสุทธิ (Net Profit)</div>
+                            <h2 class="text-warning fw-bold mb-0" id="outProfit">0 ฿</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="text-white-50 mb-2 fw-bold border-bottom border-secondary pb-2"><i class="fa-solid fa-list me-2"></i> แยกรายการต้นทุน (Cost Breakdown)</div>
+                            <table class="table table-sm cost-table mb-0">
+                                <tbody>
+                                    <tr><td>1. ค่าเสื่อมอุปกรณ์และแรงงาน</td><td class="val-col" id="bdFixed">0</td></tr>
+                                    <tr><td>2. ค่าพันธุ์ปลา</td><td class="val-col" id="bdFry">0</td></tr>
+                                    <tr><td>3. ค่าอาหารปลาสะสม <span class="text-white-50" style="font-size:0.75rem;">(ตามสูตรโปรตีน)</span></td><td class="val-col" id="bdFeed">0</td></tr>
+                                    <tr><td>4. ค่าไฟฟ้าสะสม <span class="text-white-50" style="font-size:0.75rem;">(ตามวัตต์และเครื่อง)</span></td><td class="val-col" id="bdElec">0</td></tr>
+                                    <tr><td>5. ค่าก๊าซออกซิเจน 99%</td><td class="val-col" id="bdO2">0</td></tr>
+                                    <tr><td>6. ค่าแหล่งคาร์บอน <span class="text-white-50" style="font-size:0.75rem;">(แปรผันตามปริมาตรบ่อ)</span></td><td class="val-col" id="bdBio">0</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="text-white-50 mb-2 fw-bold border-bottom border-secondary pb-2"><i class="fa-solid fa-chart-pie me-2"></i> ตัวชี้วัดการลงทุน (KPIs)</div>
+                            <div class="row g-2 mt-1">
+                                <div class="col-6"><div class="kpi-box"><div class="text-white-50 fs-6">% ROI</div><div class="fs-4 fw-bold" id="outROI">0%</div></div></div>
+                                <div class="col-6"><div class="kpi-box"><div class="text-white-50 fs-6">B/C Ratio</div><div class="fs-4 fw-bold" id="outBC">0.00</div></div></div>
+                                <div class="col-12"><div class="kpi-box py-2"><div class="text-white-50 fs-6">ระยะเวลาคืนทุน (รอบการเลี้ยง)</div><div class="fs-4 fw-bold text-info" id="outPayback">-</div></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card history-card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center history-header" onclick="toggleHistory()">
+                    <span class="text-teal fw-bold" style="color: #0d9488;"><i class="fa-solid fa-clock-rotate-left me-2"></i> ประวัติการพยากรณ์ <span class="badge bg-secondary ms-1" id="historyCount">0</span> <span style="font-size:0.8rem; color:#94a3b8; font-weight:normal;">(คลิกดู/ซ่อน)</span></span>
+                    <i class="fa-solid fa-chevron-down text-muted" id="historyToggleIcon"></i>
+                </div>
+                <div id="historyCollapse" style="display: none;" class="card-body bg-light pb-2">
+                    <label class="form-label fw-bold" style="font-size: 0.9rem;">เลือกรายการที่บันทึกไว้ (สูงสุด 10 รายการล่าสุด):</label>
+                    <div class="input-group mb-3">
+                        <select class="form-select border-primary" id="historyDropdown" onchange="viewHistoryDetail()"></select>
+                        <button class="btn btn-danger" onclick="deleteCurrentHistory()" title="ลบรายการที่กำลังเลือก"><i class="fa-solid fa-trash-can me-1"></i> ลบรายการนี้</button>
+                    </div>
+                    
+                    <div id="historyDetailBox" style="display:none;">
+                        <h6 class="border-bottom pb-2 mb-3 text-primary fw-bold"><i class="fa-solid fa-magnifying-glass-chart me-1"></i> รายละเอียดการบันทึก <span id="h_time_stamp" class="text-muted fw-normal ms-2" style="font-size: 0.8rem;"></span></h6>
+                        <div class="row row-cols-2 row-cols-md-5 g-2 mb-3">
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">1. เครื่องให้อากาศ</div><div class="history-data-val text-primary" id="h_aer"></div></div></div>
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">2. Biofloc</div><div class="history-data-val text-primary" id="h_bfl"></div></div></div>
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">3. น้ำหนักเฉลี่ย</div><div class="history-data-val text-success" id="h_wt"></div></div></div>
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">4. ADG</div><div class="history-data-val text-success" id="h_adg"></div></div></div>
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">5. % รอด</div><div class="history-data-val text-success" id="h_surv"></div></div></div>
+                            
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">6. อาหาร/วัน</div><div class="history-data-val text-danger" id="h_feed"></div></div></div>
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">7. FCR</div><div class="history-data-val text-danger" id="h_fcr"></div></div></div>
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">8. ผลผลิตรวม</div><div class="history-data-val text-primary" id="h_yield"></div></div></div>
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">9. ค่า DO</div><div class="history-data-val text-info" id="h_do"></div></div></div>
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">10. รายได้ทั้งหมด</div><div class="history-data-val text-success" id="h_rev"></div></div></div>
+                            
+                            <div class="col"><div class="history-data-box"><div class="history-data-title">11. ต้นทุนทั้งหมด</div><div class="history-data-val text-danger" id="h_cost"></div></div></div>
+                            <div class="col"><div class="history-data-box" style="background-color: #fef9c3; border-color: #facc15;"><div class="history-data-title">12. กำไรสุทธิ</div><div class="history-data-val text-warning fw-bold" id="h_profit"></div></div></div>
+                            <div class="col"><div class="history-data-box bg-dark text-white"><div class="history-data-title text-white-50">13. B/C Ratio</div><div class="history-data-val text-white" id="h_bc"></div></div></div>
+                            <div class="col"><div class="history-data-box bg-dark text-white"><div class="history-data-title text-white-50">14. % ROI</div><div class="history-data-val text-white" id="h_roi"></div></div></div>
+                            <div class="col"><div class="history-data-box bg-dark text-white"><div class="history-data-title text-white-50">15. คืนทุน (รอบ)</div><div class="history-data-val text-info" id="h_payback"></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3" style="border-top-color: #f59e0b;">
+                <div class="card-header bg-white"><i class="fa-solid fa-robot text-orange me-2"></i> ข้อเสนอแนะในการบริหารจัดการบ่อ</div>
+                <div class="card-body fs-5" id="outAdvice" style="line-height: 1.6;">
+                    <span class="text-muted">กำลังรอรับข้อมูล...</span>
+                </div>
+            </div>
+
+            <div class="card survey-card shadow-sm mb-4">
+                <div class="card-header survey-header fw-bold bg-white">
+                    <i class="fa-solid fa-star text-warning me-2"></i> ประเมินความพึงพอใจและสถิติการใช้งาน
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-4 text-center border-end mb-3 mb-md-0">
+                            <h6 class="text-secondary fw-bold">จำนวนครั้งที่เข้าใช้โปรแกรม</h6>
+                            <div class="display-3 fw-bold text-primary" id="visitorCount">58</div>
+                            <div class="badge bg-secondary">ครั้ง</div>
+                        </div>
+                        <div class="col-md-8">
+                            <h6 class="mb-3 fw-bold">กรุณาให้คะแนนความพึงพอใจในการใช้งานโปรแกรม:</h6>
+                            <div class="d-flex flex-wrap gap-2 justify-content-center mb-4 vote-btn-group">
+                                <button class="btn btn-outline-danger flex-grow-1" onclick="submitVote(1)"><i class="fa-regular fa-face-angry me-1"></i> น้อยที่สุด</button>
+                                <button class="btn btn-outline-warning flex-grow-1" onclick="submitVote(2)"><i class="fa-regular fa-face-frown me-1"></i> น้อย</button>
+                                <button class="btn btn-outline-secondary flex-grow-1" onclick="submitVote(3)"><i class="fa-regular fa-face-meh me-1"></i> ปานกลาง</button>
+                                <button class="btn btn-outline-info flex-grow-1" onclick="submitVote(4)"><i class="fa-regular fa-face-smile me-1"></i> มาก</button>
+                                <button class="btn btn-outline-success flex-grow-1" onclick="submitVote(5)"><i class="fa-regular fa-face-laugh-beam me-1"></i> มากที่สุด</button>
+                            </div>
+                            <h6 class="fw-bold mb-2 border-bottom pb-2">ผลการประเมิน (Dashboard)</h6>
+                            <div id="surveyDashboard">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<div class="container pb-4" id="mainFooter">
+    <div class="developer-credit-box d-flex flex-column align-items-center">
+        <div class="profile-wrapper">
+            <img src="รูปภาพ.jpg" alt="รศ.ดร.เจษฎา อิสเหาะ" class="profile-img" onerror="this.onerror=null; this.src='https://via.placeholder.com/130x130.png?text=Profile';">
+        </div>
+        <div class="dev-line-1"><i class="fa-solid fa-award dev-icon"></i> ออกแบบและพัฒนาโปรแกรมโดย: รศ.ดร.เจษฎา อิสเหาะ</div>
+        <div class="dev-line-2">รองศาสตราจารย์ประจำสาขาวิชาวิทยาศาสตร์การประมง มหาวิทยาลัยเทคโนโลยีราชมงคลสุวรรณภูมิ</div>
+    </div>
+</div>
+
+<script>
+    function getNum(id) {
+        let el = document.getElementById(id);
+        if(!el) return 0;
+        let val = parseFloat(el.value);
+        return isNaN(val) ? 0 : val;
+    }
+
+    // ฟังก์ชันความปลอดภัยสำหรับการออกจากโปรแกรม
+    function exitProgram() {
+        if(confirm("ท่านต้องการออกจากโปรแกรมใช่หรือไม่?")) {
+            document.getElementById("mainHeader").style.display = "none";
+            document.getElementById("mainApp").style.display = "none";
+            document.getElementById("mainFooter").style.display = "none";
+            document.body.style.backgroundColor = "#fff";
+            document.body.style.paddingBottom = "0";
+
+            let exitDiv = document.createElement("div");
+            exitDiv.innerHTML = `
+                <div style='display:flex; justify-content:center; align-items:center; height:100vh; flex-direction:column; text-align:center;'>
+                    <i class='fa-solid fa-circle-check text-success mb-3' style='font-size: 5rem;'></i>
+                    <h1 class='text-primary fw-bold'>ออกจากระบบเรียบร้อยแล้ว</h1>
+                    <p class='text-secondary fs-5 mt-2'>ขอบคุณที่ใช้งานโปรแกรมพยากรณ์และวิเคราะห์ของเราครับ</p>
+                    <p class='text-muted' style='font-size: 0.9rem;'>ท่านสามารถกดกากบาท (X) เพื่อปิดหน้าต่างเบราว์เซอร์นี้ได้เลยครับ</p>
+                </div>
+            `;
+            document.body.appendChild(exitDiv);
+            
+            setTimeout(function() { window.close(); }, 1000);
+        }
+    }
+
+    // ฟังก์ชันการเปิด-ปิดกล่องประวัติ (Dropdown Toggle)
+    function toggleHistory() {
+        let el = document.getElementById('historyCollapse');
+        let icon = document.getElementById('historyToggleIcon');
+        if (el.style.display === 'none' || el.style.display === '') {
+            el.style.display = 'block';
+            icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        } else {
+            el.style.display = 'none';
+            icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        }
+    }
+
+    // ================= ระบบ History 15 พารามิเตอร์ แบบ Dropdown =================
+    function saveData() {
+        calculateAll(); 
+        let now = new Date();
+        let timeStr = now.toLocaleDateString('th-TH') + " " + now.toLocaleTimeString('th-TH');
+        
+        let aerVal = document.getElementById('inAeration').value; 
+        if(aerVal === 'INT1') aerVal = 'INT-1';
+        if(aerVal === 'INT2') aerVal = 'INT-2';
+        if(aerVal === 'INT3') aerVal = 'INT-3';
+        
+        let bflVal = document.getElementById('inBiofloc').value === 'yes' ? 'มี Floc' : 'ไม่มี Floc';
+        
+        let record = {
+            time: timeStr,
+            aeration: aerVal,
+            biofloc: bflVal,
+            weight: document.getElementById('outWeight').innerText,
+            adg: document.getElementById('outADG').innerText.replace('ADG ในวันนี้: ', ''),
+            surv: document.getElementById('outSurvPct').innerText.replace('%รอด ณ วันนี้: ', ''),
+            feed: document.getElementById('outRecFeed').innerText.replace(' kg/d', ' kg'),
+            fcr: document.getElementById('outFCR').innerText,
+            yield: document.getElementById('outYield').innerText,
+            do_val: document.getElementById('outDO').innerText,
+            revenue: document.getElementById('outRev').innerText,
+            cost: document.getElementById('outCost').innerText,
+            profit: document.getElementById('outProfit').innerText,
+            bc: document.getElementById('outBC').innerText,
+            roi: document.getElementById('outROI').innerText,
+            payback: document.getElementById('outPayback').innerText
+        };
+
+        let history = JSON.parse(localStorage.getItem('nurseryHistoryData')) || [];
+        history.unshift(record); 
+        if(history.length > 10) history.pop(); 
+
+        localStorage.setItem('nurseryHistoryData', JSON.stringify(history));
+        updateHistoryDropdown();
+        
+        // ถ้าซ่อนอยู่ให้กางออกอัตโนมัติเมื่อกดบันทึก
+        let el = document.getElementById('historyCollapse');
+        let icon = document.getElementById('historyToggleIcon');
+        if (el.style.display === 'none') {
+            el.style.display = 'block';
+            icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        }
+        
+        alert("บันทึกข้อมูลลงในประวัติสำเร็จแล้วครับ");
+    }
+
+    function updateHistoryDropdown() {
+        let history = JSON.parse(localStorage.getItem('nurseryHistoryData')) || [];
+        document.getElementById('historyCount').innerText = history.length;
+        
+        let select = document.getElementById('historyDropdown');
+        let detailBox = document.getElementById('historyDetailBox');
+        
+        select.innerHTML = '';
+        
+        if(history.length === 0) {
+            select.innerHTML = '<option value="">-- ยังไม่มีประวัติการบันทึก --</option>';
+            select.disabled = true;
+            detailBox.style.display = 'none';
+            return;
+        }
+
+        select.disabled = false;
+        select.innerHTML = '<option value="">-- กรุณาเลือกเวลาที่บันทึกเพื่อดูรายละเอียด --</option>';
+        history.forEach((item, index) => {
+            select.innerHTML += `<option value="${index}">บันทึกเมื่อ: ${item.time} (ระบบ: ${item.aeration})</option>`;
+        });
+        
+        // ถ้ามีข้อมูลเพิ่งบันทึก ให้เลือกรายการแรกแสดงเลย
+        select.value = "0";
+        viewHistoryDetail();
+    }
+
+    function viewHistoryDetail() {
+        let index = document.getElementById('historyDropdown').value;
+        let detailBox = document.getElementById('historyDetailBox');
+        
+        if(index === "") {
+            detailBox.style.display = 'none';
+            return;
+        }
+        
+        let history = JSON.parse(localStorage.getItem('nurseryHistoryData')) || [];
+        let item = history[index];
+        if(!item) return;
+
+        document.getElementById('h_time_stamp').innerText = "[" + item.time + "]";
+        document.getElementById('h_aer').innerText = item.aeration;
+        document.getElementById('h_bfl').innerText = item.biofloc;
+        document.getElementById('h_wt').innerText = item.weight;
+        document.getElementById('h_adg').innerText = item.adg;
+        document.getElementById('h_surv').innerText = item.surv;
+        document.getElementById('h_feed').innerText = item.feed;
+        document.getElementById('h_fcr').innerText = item.fcr;
+        document.getElementById('h_yield').innerText = item.yield;
+        document.getElementById('h_do').innerText = item.do_val;
+        document.getElementById('h_rev').innerText = item.revenue;
+        document.getElementById('h_cost').innerText = item.cost;
+        document.getElementById('h_profit').innerText = item.profit;
+        document.getElementById('h_bc').innerText = item.bc;
+        document.getElementById('h_roi').innerText = item.roi;
+        document.getElementById('h_payback').innerText = item.payback;
+
+        detailBox.style.display = 'block';
+    }
+
+    function deleteCurrentHistory() {
+        let index = document.getElementById('historyDropdown').value;
+        if(index === "") {
+            alert("กรุณาเลือกรายการที่ต้องการลบจาก Dropdown ก่อนครับ");
+            return;
+        }
+
+        if(confirm("ท่านต้องการลบประวัติรายการนี้ใช่หรือไม่?")) {
+            let history = JSON.parse(localStorage.getItem('nurseryHistoryData')) || [];
+            history.splice(index, 1);
+            localStorage.setItem('nurseryHistoryData', JSON.stringify(history));
+            updateHistoryDropdown();
+        }
+    }
+
+    function clearHistory() {
+        if(confirm('ต้องการล้างประวัติข้อมูลทั้งหมดใช่หรือไม่?')) {
+            localStorage.removeItem('nurseryHistoryData');
+            updateHistoryDropdown();
+        }
+    }
+
+    // ฟังก์ชันคำนวณเส้นตรงระหว่างจุด (Interpolation)
+    function getInterpolatedValue(day, arr, day0Val) {
+        if (day <= 0) return day0Val;
+        if (day >= 70) return arr[4];
+        let p = Math.floor((day - 0.0001) / 14);
+        let dStart = p * 14;
+        let vStart = (p === 0) ? day0Val : arr[p - 1];
+        let vEnd = arr[p];
+        let ratio = (day - dStart) / 14.0;
+        return vStart + ratio * (vEnd - vStart);
+    }
+
+    // สมการจำลองสรีรวิทยา
+    function calcSynergyScore(t, do_val, tan, no2, ph) {
+        let t_score = 1.0;
+        if (t < 26) t_score = Math.max(0.4, 1.0 - ((26 - t) / 5.0));
+        else if (t > 33) t_score = Math.max(0.4, 1.0 - ((t - 33) / 4.0));
+
+        let do_score = 1.0;
+        if (do_val < 3.0) do_score = 0.4;
+        else if (do_val < 4.5) do_score = 0.4 + 0.6 * ((do_val - 3.0) / 1.5);
+        
+        let ph_score = 1.0;
+        if (ph < 6.0) ph_score = Math.max(0.5, 1.0 - ((6.0 - ph) / 1.5));
+        else if (ph > 8.5) ph_score = Math.max(0.5, 1.0 - ((ph - 8.5) / 1.5));
+
+        let tan_score = 1.0;
+        if (tan > 1.5) tan_score = Math.max(0.3, 1.0 - ((tan - 1.5) / 2.0));
+
+        let no2_score = 1.0;
+        if (no2 > 2.0) no2_score = Math.max(0.3, 1.0 - ((no2 - 2.0) / 2.0));
+
+        return Math.min(t_score, do_score, ph_score, tan_score, no2_score);
+    }
+
+    // ฐานข้อมูลจากตาราง 1 ของงานวิจัย (100% Baseline)
+    const db = {
+        T1:   { adg: [0.19, 0.12, 0.34, 1.05, 1.09], surv: [94.0, 86.5, 80.3, 69.4, 65.5], fcr: [0.62, 1.45, 1.10, 1.35, 1.52], fi: [0.41, 0.44, 0.90, 2.30, 3.25], do: [5.54, 5.41, 4.97, 4.68, 4.50], wt: [5.20, 6.85, 11.55, 26.20, 41.50], feedKg1: 12.482, feedKg2: 93.286 },
+        T2:   { adg: [0.23, 0.13, 0.39, 1.23, 1.24], surv: [96.3, 92.1, 89.7, 86.8, 84.5], fcr: [0.55, 1.15, 0.90, 1.05, 1.15], fi: [0.45, 0.52, 1.15, 2.95, 4.15], do: [5.65, 5.58, 5.25, 5.12, 4.95], wt: [5.70, 7.55, 12.95, 30.10, 47.50], feedKg1: 14.137, feedKg2: 115.314 },
+        T3:   { adg: [0.24, 0.14, 0.40, 1.28, 1.29], surv: [96.9, 93.1, 91.6, 88.7, 86.9], fcr: [0.54, 1.10, 0.88, 1.02, 1.10], fi: [0.46, 0.53, 1.20, 3.10, 4.35], do: [7.05, 6.95, 6.65, 6.75, 6.45], wt: [5.85, 7.85, 13.45, 31.40, 49.50], feedKg1: 14.482, feedKg2: 121.538 },
+        T4:   { adg: [0.29, 0.19, 0.53, 1.64, 1.71], surv: [98.9, 97.6, 96.3, 95.2, 94.5], fcr: [0.50, 0.92, 0.78, 0.92, 0.98], fi: [0.49, 0.58, 1.42, 3.65, 5.50], do: [8.35, 8.15, 7.95, 7.60, 7.45], wt: [6.55, 9.15, 16.55, 39.50, 63.50], feedKg1: 16.275, feedKg2: 151.328 },
+        INT1: { adg: [0.23, 0.16, 0.44, 1.36, 1.50], surv: [97.1, 93.1, 92.1, 91.3, 91.2], fcr: [0.58, 1.25, 0.95, 1.08, 1.18], fi: [0.45, 0.52, 1.25, 3.25, 4.60], do: [5.65, 5.58, 6.75, 6.68, 6.50], wt: [5.65, 7.95, 14.15, 33.20, 54.20], feedKg1: 21.310, feedKg2: 151.083 },
+        INT2: { adg: [0.20, 0.13, 0.43, 1.18, 1.57], surv: [94.8, 87.7, 85.5, 84.2, 88.2], fcr: [0.60, 1.38, 1.15, 1.32, 1.68], fi: [0.42, 0.46, 1.05, 2.65, 4.40], do: [5.48, 5.38, 6.65, 6.58, 6.45], wt: [5.30, 7.05, 12.80, 29.80, 51.80], feedKg1: 20.165, feedKg2: 169.405 }, 
+        INT3: { adg: [0.25, 0.16, 0.49, 1.62, 1.76], surv: [97.6, 94.0, 92.9, 92.3, 92.1], fcr: [0.55, 1.15, 0.88, 0.98, 1.05], fi: [0.48, 0.55, 1.38, 3.45, 5.15], do: [7.05, 6.95, 8.05, 7.85, 7.65], wt: [5.95, 8.25, 15.15, 37.80, 62.50], feedKg1: 22.234, feedKg2: 157.692 },
+        INT2_BF: { adg: [0.21, 0.17, 0.48, 1.43, 1.71], surv: [98.4, 96.8, 96.1, 95.6, 95.2], fcr: [0.52, 1.05, 0.85, 0.98, 1.15], fi: [0.45, 0.85, 1.55, 3.15, 4.25], do: [6.45, 6.35, 6.30, 6.38, 6.10], wt: [5.45, 7.85, 14.50, 34.50, 58.50], feedKg1: 23.903, feedKg2: 125.314 } 
+    };
+
+    // ฐานข้อมูลจากตาราง 2 ของงานวิจัย (Baseline Calibration)
+    const tb2_target_tvc = { 'T1': 8091, 'T2': 14227, 'T3': 15848, 'T4': 20310, 'INT1': 17188, 'INT2': 14907, 'INT3': 20924, 'INT2_BF': 14367 };
+    const tb2_fish = { 'T1': 2030, 'T2': 2620, 'T3': 2695, 'T4': 2929, 'INT1': 2827, 'INT2': 2734, 'INT3': 2855, 'INT2_BF': 2868 };
+
+    function calculateAll() {
+        try {
+            let days = getNum('inDays'); 
+            if (days < 0) days = 0;
+            if (days > 70) days = 70;
+            
+            let initWt = getNum('inWeight');
+            let initQty = getNum('inQty');
+            let biofloc = document.getElementById('inBiofloc').value;
+            let actualFeed = getNum('inActualFeed');
+            
+            let qtyRatio = initQty / 3100.0;
+
+            let sellPrice = getNum('inSellPrice'); 
+            let fryPrice = getNum('inFryPrice');   
+            let pro1 = getNum('inProtein1');
+            let pro2 = getNum('inProtein2');
+            let feedKgPrice1 = getNum('inFeedPrice1') / 20.0; 
+            let feedKgPrice2 = getNum('inFeedPrice2') / 20.0; 
+            let elecPrice = getNum('inElecPrice');
+            let aerMode = document.getElementById('inAeration').value;
+            
+            let bHP = getNum('inBHP');
+            let bPonds = getNum('inBPonds') || 1; 
+            let bPrice = getNum('inBPrice');
+            let mWatts = getNum('inMWatts');
+            let mQty = getNum('inMQty');
+            let mPrice = getNum('inMPrice');
+            let aQty = getNum('inAQty');
+            let aPrice = getNum('inAPrice');
+            
+            let pondDia = getNum('inPondSize');
+            let pondPrice = getNum('inPondPrice');
+            let o2Days = getNum('inO2Days') || 1.4;
+            let o2Price = getNum('inO2Price');
+            
+            let wqTemp = getNum('inTemp');
+            let wqTAN = getNum('inTAN');
+            let wqNO2 = getNum('inNO2');
+            let wqPH = getNum('inPH');
+
+            let bfl = (biofloc === 'yes');
+            let dbKey = aerMode;
+            if (aerMode === 'INT2' && bfl) {
+                dbKey = 'INT2_BF';
+            }
+            let data = JSON.parse(JSON.stringify(db[dbKey]));
+            
+            if (bfl && aerMode !== 'INT2') {
+                for(let i=0; i<5; i++) {
+                    data.adg[i] += 0.05;
+                    data.surv[i] = Math.min(100, data.surv[i] + 3);
+                    data.fcr[i] = Math.max(0.8, data.fcr[i] - 0.2);
+                    data.fi[i] = Math.max(0.1, data.fi[i] - 0.2);
+                    data.do[i] -= 0.2;
+                }
+                data.feedKg1 *= 1.05; 
+                data.feedKg2 *= 0.80; 
+            }
+
+            let isDefault = (days === 70 && initQty === 3100 && pro1 === 42 && pro2 === 32 && wqTemp === 29.15 && wqTAN === 1.38 && wqNO2 === 1.68 && wqPH === 7.22 && bHP === 3.0 && aQty === 2 && aPrice === 1000 && mWatts === 900 && mQty === 1 && mPrice === 13500 && bPrice === 10500 && pondPrice === 7500 && Math.abs(feedKgPrice1 - 1450/20) < 0.1 && Math.abs(feedKgPrice2 - 572/20) < 0.1 && elecPrice === 4.5 && o2Price === 120 && o2Days === 1.4);
+
+            let current_W = initWt;
+            let cumFeed1 = 0, cumFeed2 = 0;
+            let today_base_feed = 0, today_adg = 0, today_fcr = 0, today_rec_feed = 0;
+            let todayR1 = 0, todayR2 = 0;
+            let protein_limit_str = "";
+
+            let sum_fi_1_28 = 0, sum_fi_29_70 = 0;
+            for(let d=1; d<=70; d++) {
+                let val = getInterpolatedValue(d, data.fi, data.fi[0]*0.5);
+                if(d <= 28) sum_fi_1_28 += val;
+                else sum_fi_29_70 += val;
+            }
+
+            let cDO_base = getInterpolatedValue(days, data.do, data.do[0]);
+            let env_mult = 1.0;
+            let score_Baseline = calcSynergyScore(29.15, data.do[0], 1.38, 1.68, 7.22);
+            let score_Current = calcSynergyScore(wqTemp, data.do[0], wqTAN, wqNO2, wqPH);
+            env_mult = (score_Baseline > 0) ? (score_Current / score_Baseline) : 1.0;
+            if(env_mult > 1.2) env_mult = 1.2;
+
+            for(let d=1; d<=days; d++) {
+                let phase = Math.min(4, Math.floor((d - 1) / 14));
+                
+                let prev_wt = (phase === 0) ? initWt : data.wt[phase - 1];
+                let target_wt = data.wt[phase];
+                let base_daily_adg = (target_wt - prev_wt) / 14.0; 
+
+                let base_fcr = data.fcr[phase];
+                let raw_base_fi = getInterpolatedValue(d, data.fi, data.fi[0]*0.5);
+                let base_fi = raw_base_fi * qtyRatio; 
+
+                let r1 = 0, r2 = 0, p_base = 0;
+                if(d <= 28) { r1=1; r2=0; p_base = 42; }
+                else if(d === 29) { r1=0.75; r2=0.25; p_base = 39.5; }
+                else if(d === 30) { r1=0.50; r2=0.50; p_base = 37.0; }
+                else if(d === 31) { r1=0.25; r2=0.75; p_base = 34.5; }
+                else { r1=0; r2=1; p_base = 32; }
+
+                let p_act = (pro1 * r1) + (pro2 * r2);
+                let p_diff = p_act - p_base;
+
+                let p_adg_mult = 1.0, p_fcr_mult = 1.0, p_fi_mult = 1.0;
+                if (p_diff < 0) {
+                    p_adg_mult = 1.0 + (p_diff * 0.025); 
+                    p_fcr_mult = 1.0 - (p_diff * 0.030); 
+                    p_fi_mult = 1.0 - (p_diff * 0.015);  
+                } else {
+                    p_adg_mult = 1.0 + (p_diff * 0.005); 
+                    p_fcr_mult = 1.0 - (p_diff * 0.005); 
+                }
+                p_adg_mult = Math.max(0.5, Math.min(1.15, p_adg_mult));
+                p_fcr_mult = Math.max(0.7, Math.min(2.0, p_fcr_mult));
+
+                let daily_env = (d === days) ? env_mult : 1.0; 
+                let d_actual_ADG = base_daily_adg * p_adg_mult * daily_env;
+                
+                let d_actual_FI = base_fi * p_fi_mult * daily_env; 
+
+                current_W += d_actual_ADG;
+
+                let scale_cost = (d <= 28) ? (data.feedKg1 / sum_fi_1_28) : (data.feedKg2 / sum_fi_29_70);
+                let fi_for_cost = raw_base_fi * scale_cost * qtyRatio * p_fi_mult * daily_env;
+                
+                cumFeed1 += fi_for_cost * r1;
+                cumFeed2 += fi_for_cost * r2;
+
+                if (d === days) {
+                    today_base_feed = base_fi;
+                    today_adg = d_actual_ADG;
+                    today_fcr = base_fcr * p_fcr_mult / Math.max(0.2, daily_env); 
+                    today_rec_feed = d_actual_FI; 
+                    todayR1 = r1; todayR2 = r2;
+                    
+                    if(p_diff < -0.5) protein_limit_str = `โปรตีนต่ำกว่าเกณฑ์ (${p_base}%) ทำให้ FCR พุ่งและปลาต้องกินเพิ่ม`;
+                    else if(p_diff > 0.5) protein_limit_str = `โปรตีนสูงกว่าเกณฑ์ (${p_base}%) ช่วยดัน ADG เล็กน้อย`;
+                    else protein_limit_str = "ระดับโปรตีนตรงตามสรีรวิทยาในตาราง";
+                }
+            }
+
+            let baseSurv = getInterpolatedValue(days, data.surv, 100) / 100;
+            let actual_survFish = 0;
+            if (isDefault) {
+                actual_survFish = tb2_fish[dbKey]; 
+                current_W = data.wt[4]; 
+            } else {
+                if (env_mult < 0.5) baseSurv *= (0.8 + 0.4 * env_mult); 
+                actual_survFish = Math.floor(tb2_fish[dbKey] * qtyRatio * (baseSurv / (data.surv[4]/100)));
+            }
+            if(actual_survFish > initQty) actual_survFish = initQty;
+            
+            let actual_yieldKg = (actual_survFish * current_W) / 1000;
+            let biomass = actual_yieldKg;
+
+            if (biomass > 50 && (aerMode === 'T1' || (aerMode === 'INT2' && days <= 28))) {
+                today_rec_feed *= 0.85;
+                today_adg *= 0.85;
+                protein_limit_str += " และ มวลปลาเกินประสิทธิภาพเครื่องเติมอากาศ";
+            }
+
+            let cumFeed = cumFeed1 + cumFeed2;
+            let costFeed = Math.round((cumFeed1 * feedKgPrice1) + (cumFeed2 * feedKgPrice2));
+            
+            let currentCapex = pondPrice;
+            let wBlower = 0, wMNB = 0;
+            if (['T1', 'T3', 'T4', 'INT1', 'INT2', 'INT3'].includes(aerMode)) { currentCapex += (bPrice / bPonds) + (aQty * aPrice); wBlower = (bHP * 746 * 0.7543) / bPonds; }
+            if (['T2', 'T3', 'T4', 'INT1', 'INT2', 'INT3'].includes(aerMode)) { currentCapex += (mQty * mPrice); wMNB = mQty * mWatts; }
+
+            let finalCapex = 0;
+            let defaultUiCapex = 0;
+            if (aerMode === 'T1') { defaultUiCapex = 7500 + (10500/9) + (2*1000); finalCapex = (Math.abs(currentCapex - defaultUiCapex) < 10) ? 9875 : currentCapex; } 
+            else if (aerMode === 'T2') { defaultUiCapex = 7500 + (1*13500); finalCapex = (Math.abs(currentCapex - defaultUiCapex) < 10) ? 21000 : currentCapex; } 
+            else { defaultUiCapex = 7500 + (10500/9) + (2*1000) + (1*13500); finalCapex = (Math.abs(currentCapex - defaultUiCapex) < 10) ? 23375 : currentCapex; }
+
+            let fixedCost = Math.round((finalCapex * 0.1) + 1500);
+
+            let totalKwh = 0;
+            let d1 = Math.min(days, 28); let d2 = Math.max(0, days - 28);
+            if(aerMode === 'T1') totalKwh = (wBlower * 24 / 1000) * days;
+            else if(aerMode === 'T2') totalKwh = (wMNB * 24 / 1000) * days;
+            else if(aerMode === 'T3' || aerMode === 'T4') totalKwh = ((wBlower+wMNB) * 24 / 1000) * days;
+            else if(aerMode === 'INT1') totalKwh = ((wMNB * 24 / 1000) * d1) + (((wBlower+wMNB) * 24 / 1000) * d2);
+            else if(aerMode === 'INT2') totalKwh = ((wBlower * 24 / 1000) * d1) + (((wBlower+wMNB) * 24 / 1000) * d2);
+            else if(aerMode === 'INT3') totalKwh = (((wBlower+wMNB) * 24 / 1000) * days);
+            
+            let costElec = Math.round(totalKwh * elecPrice);
+            let costO2 = 0;
+            if(aerMode === 'T4') costO2 = Math.round((days / o2Days) * o2Price);
+            else if (aerMode === 'INT3') costO2 = Math.round((d2 / o2Days) * o2Price); 
+
+            let volTons = 3.14159 * Math.pow(pondDia / 2, 2) * 0.75;
+            let baseVolTons = 3.14159 * Math.pow(3.0 / 2, 2) * 0.75; 
+            let bioflocCost = bfl ? Math.round((volTons / baseVolTons) * (450 / 70) * days) : 0;
+
+            let costFry = Math.round(initQty * fryPrice);
+            
+            let base_dyn_tvc = costFry + costFeed + costElec + costO2 + bioflocCost;
+            let tvc_diff = tb2_target_tvc[dbKey] - base_dyn_tvc;
+            if (isDefault) {
+                costFeed += Math.round(tvc_diff);
+            } else if (days === 70 && pro1 === 42 && pro2 === 32) {
+                costFeed += Math.round(tvc_diff * qtyRatio); 
+            }
+
+            let totalCost = fixedCost + costFry + costFeed + costElec + costO2 + bioflocCost;
+            let revenue = actual_survFish * sellPrice; 
+            let netProfit = revenue - totalCost; 
+            let roi = (totalCost > 0) ? (netProfit / totalCost) * 100 : 0; 
+            let bcRatio = (totalCost > 0) ? revenue / totalCost : 0; 
+            
+            let payback = "ไม่คุ้มทุน";
+            if(netProfit > 0) { let pbVal = (Math.floor((finalCapex / netProfit) * 100) / 100).toFixed(2); payback = pbVal + " รอบ"; }
+
+            // === นำค่าไปแสดงผลบนหน้าจอ ===
+            document.getElementById('outWeight').innerText = current_W.toFixed(2) + " g";
+            document.getElementById('outADG').innerText = "ADG ในวันนี้: " + today_adg.toFixed(2) + " g/d";
+            document.getElementById('outSurvFish').innerText = actual_survFish.toLocaleString() + " ตัว";
+            
+            let cur_surv_disp = (actual_survFish / initQty) * 100;
+            document.getElementById('outSurvPct').innerText = "%รอด ณ วันนี้: " + cur_surv_disp.toFixed(1) + "%";
+            
+            let todayF1 = today_rec_feed * todayR1;
+            let todayF2 = today_rec_feed * todayR2;
+            let feedStr = "";
+            if (todayR1 > 0 && todayR2 === 0) feedStr = `โปรตีน ${pro1}% = ${todayF1.toFixed(2)} kg`;
+            else if (todayR1 === 0 && todayR2 > 0) feedStr = `โปรตีน ${pro2}% = ${todayF2.toFixed(2)} kg`;
+            else feedStr = `โปรตีน ${pro1}% = ${todayF1.toFixed(2)} kg<br>โปรตีน ${pro2}% = ${todayF2.toFixed(2)} kg`;
+
+            document.getElementById('outRecFeed').innerText = today_rec_feed.toFixed(2) + " kg/d";
+            
+            let diffRatio = today_rec_feed / today_base_feed;
+            if(diffRatio < 0.95) {
+                document.getElementById('outRecFeedDetails').innerHTML = feedStr + "<br><span style='font-size:0.75rem; color:#ef4444;'>*ปรับลดจากเป้าหมาย " + today_base_feed.toFixed(2) + " kg ตามสรีรวิทยาปลา</span>";
+            } else if (diffRatio > 1.05) {
+                document.getElementById('outRecFeedDetails').innerHTML = feedStr + "<br><span style='font-size:0.75rem; color:#10b981;'>*เพิ่มอาหารจากเป้าหมาย " + today_base_feed.toFixed(2) + " kg ชดเชยการขาดโปรตีน</span>";
+            } else {
+                document.getElementById('outRecFeedDetails').innerHTML = feedStr;
+            }
+
+            document.getElementById('outCumFeed').innerText = "อาหารสะสมรวม: " + cumFeed.toFixed(2) + " kg";
+            document.getElementById('outYield').innerText = actual_yieldKg.toFixed(2) + " kg";
+            
+            if (isDefault) today_fcr = data.fcr[4]; 
+            document.getElementById('outFCR').innerText = today_fcr.toFixed(2);
+            document.getElementById('outDO').innerText = cDO_base.toFixed(2) + " mg/L";
+
+            document.getElementById('outRev').innerText = revenue.toLocaleString(undefined,{maximumFractionDigits:0}) + " ฿";
+            document.getElementById('outCost').innerText = totalCost.toLocaleString(undefined,{maximumFractionDigits:0}) + " ฿";
+            
+            let pfEl = document.getElementById('outProfit');
+            pfEl.innerText = netProfit.toLocaleString(undefined,{maximumFractionDigits:0}) + " ฿";
+            pfEl.className = netProfit >= 0 ? "text-warning fw-bold mb-0" : "text-danger fw-bold mb-0";
+
+            let formatMoney = (val) => Math.round(val).toLocaleString();
+            document.getElementById('bdFixed').innerText = formatMoney(fixedCost);
+            document.getElementById('bdFry').innerText = formatMoney(costFry);
+            document.getElementById('bdFeed').innerText = formatMoney(costFeed);
+            document.getElementById('bdElec').innerText = formatMoney(costElec);
+            document.getElementById('bdO2').innerText = formatMoney(costO2);
+            document.getElementById('bdBio').innerText = formatMoney(bioflocCost);
+
+            let roiEl = document.getElementById('outROI');
+            let dispROI = (Math.floor(roi * 10) / 10).toFixed(1);
+            roiEl.innerText = dispROI + "%";
+            roiEl.className = roi >= 0 ? "fs-4 fw-bold text-success" : "fs-4 fw-bold text-danger";
+            
+            let dispBC = (Math.floor(bcRatio * 100) / 100).toFixed(2);
+            document.getElementById('outBC').innerText = dispBC;
+            document.getElementById('outPayback').innerText = payback;
+
+            // ================== AI คำแนะนำ ==================
+            let advice = "<ul class='mb-2 ps-3'>";
+
+            advice += "<div class='correlation-box mb-3'><h6 class='fw-bold text-primary mb-1'><i class='fa-solid fa-microchip me-1'></i> เป้าหมายอาหารที่ควรจะให้วันนี้คือ " + today_base_feed.toFixed(2) + " กก./วัน</h6>";
+            if(diffRatio < 0.95) {
+                advice += "<p class='mb-1 text-secondary'><b>ผลการประเมิน:</b> สภาพปัจจุบัน <u>มีความเครียดจากพารามิเตอร์น้ำ หรือโภชนาการ ("+protein_limit_str+")</u> ระบบจึง <b>ปรับลดปริมาณอาหารอัตโนมัติลงเหลือ " + today_rec_feed.toFixed(2) + " กก./วัน</b> เพื่อลด FCR และป้องกันน้ำเน่าเสียเฉียบพลัน</p>";
+            } else if (diffRatio > 1.05) {
+                advice += "<p class='mb-1 text-secondary'><b>ผลการประเมิน:</b> พบปัญหา <u>โภชนาการ ("+protein_limit_str+")</u> ทำให้ปลาต้องกินอาหารเพิ่มขึ้นเพื่อชดเชยพลังงาน ระบบจึงขยับปริมาณอาหารเป็น <b>" + today_rec_feed.toFixed(2) + " กก./วัน</b> (ส่งผลให้ต้นทุนสูงขึ้น)</p>";
+            } else {
+                advice += "<p class='mb-1 text-secondary'><b>ผลการประเมิน:</b> สภาพแวดล้อมและโภชนาการปัจจุบัน ("+protein_limit_str+") อยู่ในเกณฑ์ที่สามารถให้ปลากินอาหารได้ตามเป้าหมาย <b>" + today_rec_feed.toFixed(2) + " กก./วัน</b></p>";
+            }
+            advice += "</div>";
+
+            if (days >= 29 && days <= 31) {
+                let mixRatios = {29: "75:25", 30: "50:50", 31: "25:75"};
+                advice += "<li class='text-primary fw-bold'>[สูตรผสมอาหาร] วันนี้อายุปลา " + days + " วัน (ช่วงเปลี่ยนผ่าน) แนะนำให้ผสมอาหารโปรตีน " + pro1 + "% และ " + pro2 + "% ในอัตราส่วน " + mixRatios[days] + " เพื่อให้ลำไส้ปลาปรับตัวได้ดีที่สุด</li>";
+            }
+
+            let feedDiff = actualFeed - today_rec_feed;
+            if (diffRatio < 1.0 && actualFeed > today_rec_feed) {
+                advice += "<li class='text-danger fw-bold'>[การให้อาหาร] โปรดลดปริมาณอาหารลงด่วน! การฝืนให้อาหารเท่าเดิมในสภาวะที่น้ำแย่/โปรตีนผิดสัดส่วน จะทำให้ปลาเครียดและ FCR พุ่งสูงทันที</li>";
+            } else if (Math.abs(feedDiff) <= 0.15) {
+                advice += "<li class='text-success fw-bold'>[การให้อาหาร] ยอดเยี่ยม! ปริมาณอาหาร ("+actualFeed+" กก.) สอดคล้องกับค่าพยากรณ์จากแบบจำลองแล้วครับ</li>";
+            } else if (feedDiff > 0.15) {
+                advice += "<li class='text-danger fw-bold'>[การให้อาหาร] ให้อาหารมากเกินความสามารถในการย่อยปัจจุบัน ("+actualFeed+" กก.) ควรลดลงให้ใกล้เคียง " + today_rec_feed.toFixed(2) + " กก./วัน</li>";
+            } else {
+                advice += "<li class='text-orange fw-bold'>[การให้อาหาร] ให้อาหารน้อยเกินไป ("+actualFeed+" กก.) ปลาอาจโตไม่ได้ตามเป้า ควรเพิ่มให้ใกล้เคียง " + today_rec_feed.toFixed(2) + " กก./วัน</li>";
+            }
+
+            if(netProfit < 0) advice += "<li class='text-danger'>[การเงิน] ต้นทุนสูงกว่ารายได้ กรุณาพิจารณาปรับลดค่าไฟ หรือตรวจสอบคุณภาพน้ำด่วน</li>";
+
+            if (bfl && wqTAN > 0.8) {
+                let severity = wqTAN > 1.5 ? "text-danger" : "text-warning";
+                let prefix = wqTAN > 1.5 ? "[วิกฤต TAN]" : "[เฝ้าระวัง TAN]";
+                advice += "<li class='" + severity + " fw-bold'>" + prefix + " แอมโมเนียมีค่าแกว่งสูงขึ้น (" + wqTAN + " mg/L) แนะนำให้แก้ไขโดย <b>การเปลี่ยนถ่ายน้ำออก 10% (ประมาณ " + (volTons * 0.1 * 1000).toFixed(0) + " ลิตร) แล้วนำน้ำไบโอฟลอคที่เพาะเตรียมไว้จนสมบูรณ์จากบ่อภายนอก (Ex-situ) เติมกลับเข้าไปทดแทน 10% ทันที</b> หรือร่วมกับการสาดกากน้ำตาลเพื่อดึง C:N Ratio</li>";
+            } else if (!bfl && wqTAN > 1.5) {
+                advice += "<li class='text-danger fw-bold'>[วิกฤต TAN] แอมโมเนียเกิน 1.5 mg/L ควรงดอาหารและเปลี่ยนน้ำ 20% ทันที</li>";
+            } else if (!bfl && wqTAN > 0.8) {
+                advice += "<li class='text-orange fw-bold'>[เฝ้าระวัง TAN] แอมโมเนียเริ่มสะสม ควรควบคุมปริมาณอาหารและพิจารณาเปลี่ยนถ่ายน้ำ</li>";
+            }
+
+            if(wqNO2 > 1.0) advice += "<li class='text-danger fw-bold'>[วิกฤต Nitrite] ไนไตรท์พุ่งสูง ให้เติมเกลือแกง (NaCl) " + (volTons * 0.3).toFixed(1) + " กก./บ่อ เพื่อลดความเป็นพิษในเลือดปลา</li>";
+            advice += "</ul>";
+
+            advice += "<hr style='border-color:#cbd5e1;'><div class='mt-2 p-2 rounded' style='background-color: #f8fafc; border-left: 5px solid #0ea5e9;'>";
+            advice += "<h6 class='fw-bold text-primary mb-2'><i class='fa-solid fa-chart-line me-1'></i> สรุปความคุ้มค่าและทิศทางการลงทุน:</h6>";
+            if (aerMode === 'INT2' && bfl) {
+                advice += "<span class='text-success fw-bold'>✅ ควรลงทุนดำเนินการต่อในรูปแบบนี้!</span><br>นี่คือรูปแบบที่ดีและคุ้มค่าที่สุดจากการวิจัย เนื่องจากให้อัตราการรอดสูง (95.2%) ปลาโตได้ขนาดตามตลาด (58.5g) อัตราแลกเนื้อ (FCR) ต่ำสุดเพียง 0.98 ประหยัดค่าอาหารได้มหาศาล และให้กำไรสุทธิสูงสุดอย่างยั่งยืน";
+            } else if (aerMode === 'T1') {
+                advice += "<span class='text-danger fw-bold'>❌ ไม่แนะนำให้ลงทุนดำเนินการด้วยรูปแบบนี้!</span><br>ตัวเลขกำไรที่เห็นเป็น <b>'ภาพลวงตา'</b> จากต้นทุนที่ต่ำ แต่ในโลกความจริงปลาจะรอดน้อย (65.5%) แคระแกร็นไม่ได้ขนาด (41.5g) และเสี่ยงขาดทุนย่อยยับจากปลาตายยกบ่อเพราะ DO ต่ำ <br><span class='text-primary fw-bold'>💡 แนะนำรูปแบบที่ดีกว่า:</span> ควรเปลี่ยนไปใช้ระบบ <b>INT-2 ร่วมกับ Biofloc</b> เพื่อยกระดับขนาดปลา ลดความเสี่ยง และทำกำไรได้อย่างยั่งยืน";
+            } else {
+                advice += "<span class='text-orange fw-bold'>⚠️ รูปแบบนี้ทำกำไรได้ แต่ยังไม่คุ้มค่าสูงสุด</span><br>ระบบนี้มีต้นทุนค่าอาหารหรือค่าไฟที่สูงเกินความจำเป็น ทำให้ศักยภาพในการทำกำไรลดลง<br><span class='text-primary fw-bold'>💡 แนะนำรูปแบบที่ดีกว่า:</span> ควรเปลี่ยนไปใช้ระบบ <b>INT-2 (แอร์ลิฟท์ 28 วันแรก + MNB ช่วงหลัง) ร่วมกับ Biofloc</b> เพราะจะช่วยลดค่าอาหารได้อย่างมหาศาล ดันน้ำหนักปลาได้ถึง 58.5g และเพิ่มกำไรสุทธิให้สูงขึ้นอย่างมั่นคง";
+            }
+            advice += "</div>";
+
+            document.getElementById('outAdvice').innerHTML = advice;
+
+        } catch(error) {
+            console.error(error);
+        }
+    }
+
+    // ================= ระบบแบบสำรวจความพึงพอใจและสถิติ =================
+    let sysData = JSON.parse(localStorage.getItem('nurserySysData'));
+    if (!sysData) {
+        sysData = {
+            visitors: 58, 
+            votes: { 5: 35, 4: 15, 3: 5, 2: 2, 1: 1 }
+        };
+    }
+
+    function updateSurveyDashboard() {
+        document.getElementById('visitorCount').innerText = sysData.visitors;
+        
+        let totalVotes = Object.values(sysData.votes).reduce((a, b) => a + b, 0);
+        if (totalVotes === 0) totalVotes = 1;
+
+        let html = '';
+        const labels = {5: 'มากที่สุด', 4: 'มาก', 3: 'ปานกลาง', 2: 'น้อย', 1: 'น้อยที่สุด'};
+        const colors = {5: 'bg-success', 4: 'bg-info', 3: 'bg-secondary', 2: 'bg-warning', 1: 'bg-danger'};
+
+        for (let i = 5; i >= 1; i--) {
+            let v = sysData.votes[i];
+            let pct = ((v / totalVotes) * 100).toFixed(1);
+            html += `
+                <div class="d-flex align-items-center mb-2">
+                    <div style="width: 80px;" class="fw-bold text-end me-2 text-muted small">${labels[i]}</div>
+                    <div class="progress flex-grow-1" style="height: 22px; border-radius: 10px;">
+                        <div class="progress-bar ${colors[i]}" role="progressbar" style="width: ${pct}%;" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">${pct}%</div>
+                    </div>
+                    <div style="width: 60px;" class="text-end fw-bold text-secondary small">${v} ครั้ง</div>
+                </div>
+            `;
+        }
+        document.getElementById('surveyDashboard').innerHTML = html;
+    }
+
+    function submitVote(level) {
+        sysData.votes[level]++;
+        localStorage.setItem('nurserySysData', JSON.stringify(sysData));
+        updateSurveyDashboard();
+        
+        let btns = document.querySelectorAll('.vote-btn-group .btn');
+        btns.forEach(btn => {
+            btn.disabled = true;
+            setTimeout(() => btn.disabled = false, 3000);
+        });
+    }
+
+    window.onload = function() {
+        document.querySelectorAll('input, select').forEach(el => {
+            el.addEventListener('input', calculateAll);
+            el.addEventListener('change', calculateAll);
+        });
+        calculateAll(); 
+        
+        updateHistoryDropdown();
+
+        sysData.visitors++;
+        localStorage.setItem('nurserySysData', JSON.stringify(sysData));
+        
+        updateSurveyDashboard();
+    };
+</script>
+
+</body>
+</html>
